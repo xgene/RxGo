@@ -196,6 +196,7 @@ func (ob Observable) Buffer(closingNotifier Observable) Observable {
 // 缓冲直至收到信号
 // 缓冲固定数目或达到某个时长
 func (ob Observable) BufferCount(count int) Observable {
+	if count < 1 {count =1}
 	return func(sink *Observer) error {
 		cache := []interface{}{}
 		return ob(sink.CreateFuncObserver(func(event *Event) {
