@@ -190,3 +190,37 @@ func (ob Observable) Buffer(closingNotifier Observable) Observable {
 		return ob(obs)
 	}
 }
+
+// 缓冲固定数目的元素并读出
+// 缓冲固定数目的元素并读出部分元素
+// 缓冲直至收到信号
+// 缓冲固定数目或达到某个时长
+func (ob Observable) BufferCount(count int) Observable {
+	return func(sink *Observer) error {
+		cache := []interface{}{}
+		return ob(sink.CreateFuncObserver(func(event *Event) {
+			cache = append(cache, event.Data)
+			if len(cache)== count {
+				sink.Next(cache)
+				cache = []interface{}{}
+			}
+		}))
+	}
+}
+func (ob Observable) BufferCountSkip(count,skip int) Observable {
+	if count < 1 {count =1}
+	if skip < 1 {skip =1}
+	if skip > count{skip = count}
+	return func(sink *Observer) error {
+		cache := []interface{}{}
+		return ob(sink.CreateFuncObserver(func(event *Event) {
+			cache = append(cache, event.Data)
+			if len(cache)== count {
+				var tmp = make([]interface{}, count)
+				copy(tmp,cache)
+				sink.Next(tmp)
+				cache = cache[skip:]
+			}
+		}))
+	}
+}
